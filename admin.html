@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Pescadería</title>
+    <style>
+        :root { --primary: #2563eb; --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; }
+        body { font-family: system-ui, sans-serif; background: var(--light); color: var(--dark); padding: 20px; margin: 0; }
+        .container { max-width: 700px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; }
+        button { background: var(--primary); color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:hover { background: #1d4ed8; }
+        .product-item { display: flex; align-items: center; justify-content: space-between; background: white; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .product-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-right: 15px; }
+        .product-info { flex-grow: 1; display: flex; align-items: center; }
+        .btn-delete { background: #ef4444; width: auto; padding: 5px 10px; font-size: 14px; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-delete:hover { background: #dc2626; }
+        .nav-link { display: inline-block; margin-bottom: 20px; color: var(--primary); text-decoration: none; font-weight: bold; }
+        .login-screen { display: none; max-width: 400px; margin: 100px auto; text-align: center; }
+        .admin-content { display: none; }
+        .error-msg { color: #ef4444; margin-top: 10px; display: none; }
+        .btn-logout { background: #64748b; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container login-screen" id="loginScreen">
+    <div class="card">
+        <h2>Acceso Restringido</h2>
+        <form id="loginForm">
+            <div class="form-group"><input type="password" id="adminPassword" required placeholder="Contraseña"></div>
+            <button type="submit">Ingresar al Panel</button>
+            <div class="error-msg" id="loginError">Contraseña incorrecta.</div>
+        </form>
+    </div>
+</div>
+
+<div class="container admin-content" id="adminContent">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="index.html" class="nav-link">← Ir a la Vista del Cliente</a>
+        <button class="btn-delete btn-logout" id="btnLogoutBtn">Cerrar Sesión</button>
+    </div>
+    <h1>Panel de Administración (Nube)</h1>
+    <div class="card">
+        <h2>Agregar Nuevo Producto</h2>
+        <form id="adminForm">
+            <div class="form-group"><label>Nombre del Pescado / Marisco:</label><input type="text" id="pName" placeholder="Ej. Filet de Merluza" required></div>
+            <div class="form-group"><label>Precio ($):</label><input type="number" id="pPrice" step="0.01" placeholder="Ej. 1200.00" required></div>
+            <div class="form-group"><label>ID de Google Drive o URL de Imagen:</label><input type="text" id="pImg" placeholder="Pega el ID largo de Drive o enlace" required></div>
+            <button type="submit">Guardar en la Nube</button>
+        </form>
+    </div>
+    <h2>Productos Actuales</h2>
+    <div id="adminList">Cargando productos de la pescadería...</div>
+</div>
+
+<script>
+    const CORRECT_PASSWORD = "admin123"; 
+    const FIREBASE_URL = "https://firebaseio.com";
+
+    const loginScreen = document.getElementById('loginScreen');
+    const adminContent = document.getElementById('adminContent');
+    let productsData = {};
+
+    function checkAuth() {
+        if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+            loginScreen.style.display = 'none';
+            adminContent.style.display = 'block';
+            loadFirebaseData();
+        } else {
+            loginScreen.style.display = 'block';
+            adminContent.style.display = 'none';
+        }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (document.getElementById('adminPassword').value === CORRECT_PASSWORD) {
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
+            checkAuth();
+        } else { document.getElementById('loginError').style.display = 'block'; }
+    });
+
+    document.getElementById('btnLogoutBtn').addEventListener('click', () => {
+        sessionStorage.removeItem('isAdminLoggedIn');
+        checkAuth();
+    });
+
+    function loadFirebaseData() {
+        fetch(FIREBASE_URL)
+        .then(res => res.json())
+        .then(data => {
+            productsData = data || {};
+            renderAdminList();
+        });
+    }
+
+    function renderAdminList() {
+        const adminList = document.getElementById('adminList');
+        adminList.innerHTML = Object.keys(productsData).length === 0 ? '<p>No hay productos en el catálogo de pescadería.</p>' : '';
+        
+        for (let id in productsData) {
+            const p = productsData[id];
+            const item = document.createElement('div');
+            item.classList.add('product-item');
+            item.innerHTML = `
+                <div class="product-info">
+                    <img src="${p.img}" onerror="this.src='https://placehold.co'">
+                    <div><strong>${p.name}</strong><br><span style="color:#2563eb;">$${Number(p.price).toFixed(2)}</span></div>
+                </div>
+                <button class="btn-delete" onclick="deleteProduct('${id}')">Eliminar</button>
+            `;
+            adminList.appendChild(item);
+        }
+    }
+
+    document.getElementById('adminForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        let imgInputValue = document.getElementById('pImg').value.trim();
+        
+        if(!imgInputValue.startsWith('http')) {
+            imgInputValue = `https://googleusercontent.com{imgInputValue}`;
+        }
+
+        const newProduct = {
+            name: document.getElementById('pName').value.trim(),
+            price: parseFloat(document.getElementById('pPrice').value),
+            img: imgInputValue
+        };
+
+        fetch(FIREBASE_URL, {
+            method: 'POST',
+            body: JSON.stringify(newProduct)
+        }).then(() => {
+            loadFirebaseData();
+            document.getElementById('adminForm').reset();
+        });
+    });
+
+    window.deleteProduct = function(id) {
+        const deleteUrl = FIREBASE_URL.replace('products.json', `products/${id}.json`);
+        fetch(deleteUrl, { method: 'DELETE' }).then(() => loadFirebaseData());
+    }
+
+    checkAuth();
+</script>
+</body>
+</html>
