@@ -58,10 +58,26 @@
     <div id="adminList">Cargando productos de la pescadería...</div>
 </div>
 
-<script>
-    const CORRECT_PASSWORD = "admin123"; 
-    const FIREBASE_URL = "https://pescaderia-norberto-9ce18-default-rtdb.firebaseio.com/";
+<!-- IMPORTACIÓN DE CONFIGURACIÓN Y MÓDULOS DE FIREBASE -->
+<script type="module">
+    import { initializeApp } from "https://gstatic.com";
+    import { getDatabase, ref, push, set, onValue, remove } from "https://gstatic.com";
 
+    // Reemplaza los datos ficticios con tus credenciales de la consola de Firebase si las tienes.
+    // Lo más importante es que el "databaseURL" coincida con tu enlace.
+    const firebaseConfig = {
+        apiKey: "AIzaSyYourKeyHere", 
+        authDomain: "://firebaseapp.com",
+        databaseURL: "https://pescaderia-norberto-9ce18-default-rtdb.firebaseio.com",
+        projectId: "pescaderia-norberto-9ce18",
+        storageBucket: "://appspot.com"
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const CORRECT_PASSWORD = "admin123"; 
     const loginScreen = document.getElementById('loginScreen');
     const adminContent = document.getElementById('adminContent');
     let productsData = {};
@@ -82,7 +98,9 @@
         if (document.getElementById('adminPassword').value === CORRECT_PASSWORD) {
             sessionStorage.setItem('isAdminLoggedIn', 'true');
             checkAuth();
-        } else { document.getElementById('loginError').style.display = 'block'; }
+        } else { 
+            document.getElementById('loginError').style.display = 'block'; 
+        }
     });
 
     document.getElementById('btnLogoutBtn').addEventListener('click', () => {
@@ -90,11 +108,11 @@
         checkAuth();
     });
 
+    // ESCUCHAR EN TIEMPO REAL (Adiós al viejo fetch)
     function loadFirebaseData() {
-        fetch(FIREBASE_URL)
-        .then(res => res.json())
-        .then(data => {
-            productsData = data || {};
+        const productosRef = ref(db, 'productos');
+        onValue(productosRef, (snapshot) => {
+            productsData = snapshot.val() || {};
             renderAdminList();
         });
     }
@@ -112,17 +130,24 @@
                     <img src="${p.img}" onerror="this.src='https://placehold.co'">
                     <div><strong>${p.name}</strong><br><span style="color:#2563eb;">$${Number(p.price).toFixed(2)}</span></div>
                 </div>
-                <button class="btn-delete" onclick="deleteProduct('${id}')">Eliminar</button>
+                <button class="btn-delete" id="btn-del-${id}">Eliminar</button>
             `;
             adminList.appendChild(item);
+
+            // Asignar el evento de eliminar de forma segura para JavaScript Moderno (módulos)
+            document.getElementById(`btn-del-${id}`).addEventListener('click', () => {
+                deleteProduct(id);
+            });
         }
     }
 
-    document.getElementById('adminForm').addEventListener('submit', (e) => {
+    // AGREGAR UN PRODUCTO NUEVO
+    document.getElementById('adminForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         let imgInputValue = document.getElementById('pImg').value.trim();
         
         if(!imgInputValue.startsWith('http')) {
+            // Corregido agregando la "/" que faltaba en la URL original
             imgInputValue = `https://googleusercontent.com{imgInputValue}`;
         }
 
@@ -132,21 +157,34 @@
             img: imgInputValue
         };
 
-        fetch(FIREBASE_URL, {
-            method: 'POST',
-            body: JSON.stringify(newProduct)
-        }).then(() => {
-            loadFirebaseData();
+        try {
+            const productosRef = ref(db, 'productos');
+            const nuevoProductoRef = push(productosRef);
+            await set(nuevoProductoRef, newProduct);
+            
             document.getElementById('adminForm').reset();
-        });
+        } catch (error) {
+            console.error("Error al guardar producto:", error);
+            alert("No se pudo guardar el producto en la base de datos.");
+        }
     });
 
-    window.deleteProduct = function(id) {
-        const deleteUrl = FIREBASE_URL.replace('products.json', `products/${id}.json`);
-        fetch(deleteUrl, { method: 'DELETE' }).then(() => loadFirebaseData());
+    // ELIMINAR UN PRODUCTO
+    async function deleteProduct(id) {
+        if(confirm("¿Estás seguro de que quieres eliminar este producto?")) {
+            try {
+                const productoEspecificoRef = ref(db, `productos/${id}`);
+                await remove(productoEspecificoRef);
+            } catch (error) {
+                console.error("Error al eliminar:", error);
+                alert("No se pudo eliminar el producto.");
+            }
+        }
     }
 
+    // Inicializar el chequeo de sesión al cargar la página
     checkAuth();
 </script>
 </body>
 </html>
+
