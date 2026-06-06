@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Oficial - Pescadería</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        header h1 {
+            margin: 0 0 10px 0;
+            color: var(--primary);
+            font-size: 2.5rem;
+        }
+
+        /* Botón flotante/superior de administración */
+        .admin-nav {
+            text-align: right;
+            margin-bottom: 15px;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.9rem;
+        }
+
+        /* Secciones Modulares */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Formulario y Tarjetas de Administración */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        button.btn-main {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        button.btn-main:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Catálogo en Cuadrícula Responsiva (Celular y PC) */
+        .catalog {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background-color: #cbd5e1;
+        }
+
+        .product-content {
+            padding: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-title {
+            font-size: 1.2rem;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+        }
+
+        .product-price {
+            font-size: 1.4rem;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        /* Herramientas de Administrador dentro del Catálogo */
+        .admin-actions {
+            padding: 10px 15px;
+            background: #f1f5f9;
+            border-top: 1px solid var(--border);
+            display: none;
+        }
+
+        body.admin-mode .admin-actions {
+            display: block;
+        }
+
+        .btn-delete {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .btn-delete:hover {
+            background-color: var(--danger-hover);
+        }
+
+        /* Alertas y Utilidades */
+        .error-msg {
+            color: var(--danger);
+            margin-top: 10px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            grid-column: 1 / -1;
+            color: #64748b;
+            font-size: 1.2rem;
+            padding: 40px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- Botón para alternar entre Cliente y Administrador -->
+    <div class="admin-nav">
+        <button id="btnToggleMode" class="btn-link" onclick="handleModeRoute()">Acceso Administrador →</button>
+    </div>
+
+    <header>
+        <h1 id="mainTitle">Pescadería Mar Azul</h1>
+        <p id="mainSubtitle">Precios y productos frescos del día</p>
+    </header>
+
+    <!-- PANTALLA 1: LOGIN (OCULTA POR DEFECTO) -->
+    <div id="sectionLogin" class="section">
+        <div class="card" style="max-width: 400px; margin: 40px auto; text-align: center;">
+            <h2>Panel Protegido</h2>
+            <p>Ingresa la contraseña de administrador</p>
+            <form id="loginForm" onsubmit="submitLogin(event)">
+                <div class="form-group">
+                    <input type="password" id="adminPassword" required placeholder="Contraseña">
+                </div>
+                <button type="submit" class="btn-main">Ingresar al Panel</button>
+                <div class="error-msg" id="loginError">Contraseña incorrecta.</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: FORMULARIO ADMINISTRADOR (OCULTA POR DEFECTO) -->
+    <div id="sectionAdminForm" class="section">
+        <div class="card">
+            <h2>Agregar Nuevo Producto</h2>
+            <form id="adminForm" onsubmit="saveProduct(event)">
+                <div class="form-group">
+                    <label for="pName">Nombre del Producto:</label>
+                    <input type="text" id="pName" placeholder="Ej. Filet de Merluza" required>
+                </div>
+                <div class="form-group">
+                    <label for="pPrice">Precio ($):</label>
+                    <input type="number" id="pPrice" step="0.01" placeholder="Ej. 4500.00" required>
+                </div>
+                <div class="form-group">
+                    <label for="pImg">ID de Google Drive o URL de Imagen:</label>
+                    <input type="text" id="pImg" placeholder="Pega el código de tu imagen de Drive o un enlace web" required>
+                </div>
+                <button type="submit" class="btn-main">Guardar en la Nube</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PANTALLA 3: CATÁLOGO (SIEMPRE VISIBLE) -->
+    <div id="sectionCatalog" class="section active">
+        <div class="catalog" id="productsGrid">
+            <div class="loading">Cargando delicias del mar...</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Dirección oficial de tu base de datos Firebase
+    const FIREBASE_URL = "https://firebaseio.com";
+    const CORRECT_PASSWORD = "admin123"; // Cambia esta contraseña si lo deseas
+
+    let productsData = {};
+
+    // Al arrancar la página, cargamos los datos de la nube
+    window.onload = () => {
+        loadDataFromFirebase();
+        evaluateAdminSession();
+    };
+
+    // Descarga los productos desde Firebase
+    function loadDataFromFirebase() {
+        const grid = document.getElementById('productsGrid');
+        
+        fetch(FIREBASE_URL)
+        .then(res => {
+            if (!res.ok) throw new Error();
+            return res.json();
+        })
+        .then(data => {
+            productsData = data || {};
+            renderCatalog();
+        })
+        .catch(() => {
+            grid.innerHTML = '<div class="loading" style="color:red;">Error de conexión. Verifica las reglas de Firebase.</div>';
+        });
+    }
+
+    // Dibuja las tarjetas en la pantalla
+    function renderCatalog() {
+        const grid = document.getElementById('productsGrid');
+        grid.innerHTML = '';
+
+        if (Object.keys(productsData).length === 0) {
+            grid.innerHTML = '<div class="loading">No hay productos publicados hoy.</div>';
+            return;
+        }
+
+        for (let id in productsData) {
+            const p = productsData[id];
+            const card = document.createElement('div');
+            card.classList.add('product-card');
+
+            card.innerHTML = `
+                <img class="product-img" src="${p.img}" alt="${p.name}" onerror="this.src='https://unsplash.com'">
+                <div class="product-content">
+                    <h3 class="product-title">${p.name}</h3>
+                    <div class="product-price">$${Number(p.price).toFixed(2)}</div>
+                </div>
+                <div class="admin-actions">
+                    <button class="btn-delete" onclick="deleteProduct('${id}')">Eliminar Producto</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        }
+    }
+
+    // Lógica para alternar las vistas y botones de la barra superior
+    function handleModeRoute() {
+        const isLogged = sessionStorage.getItem('isAdmin') === 'true';
+        
+        if (document.getElementById('sectionAdminForm').classList.contains('active') || document.getElementById('sectionLogin').classList.contains('active')) {
+// Si está en el admin, regresa a vista clienteshowSection('customer');} else {// Si no está logueado va al login, si ya lo está va al formularioif (isLogged) showSection('admin');else showSection('login');}}function showSection(mode) {const btn = document.getElementById('btnToggleMode');const loginSec = document.getElementById('sectionLogin');const formSec = document.getElementById('sectionAdminForm');// Reiniciar estados visualesloginSec.classList.remove('active');formSec.classList.remove('active');document.body.classList.remove('admin-mode');if (mode === 'customer') {btn.innerText = "Acceso Administrador →";} else if (mode === 'login') {loginSec.classList.add('active');btn.innerText = "← Volver al Catálogo";} else if (mode === 'admin') {formSec.classList.add('active');document.body.classList.add('admin-mode'); // Activa los botones de borrar en las tarjetasbtn.innerText = "← Cerrar Panel / Salir";}}function evaluateAdminSession() {if (sessionStorage.getItem('isAdmin') === 'true') {document.body.classList.add('admin-mode');}}// Procesar contraseñafunction submitLogin(e) {e.preventDefault();const pass = document.getElementById('adminPassword').value;const err = document.getElementById('loginError');if (pass === CORRECT_PASSWORD) {sessionStorage.setItem('isAdmin', 'true');err.style.display = 'none';document.getElementById('adminPassword').value = '';showSection('admin');} else {err.style.display = 'block';}}// Guardar nuevo producto en Firebasefunction saveProduct(e) {e.preventDefault();let imgVal = document.getElementById('pImg').value.trim();// Convertidor automático si solo se coloca el ID de Google Driveif (!imgVal.startsWith('http')) {imgVal = https://googleusercontent.com{imgVal};}const newP = {name: document.getElementById('pName').value.trim(),price: parseFloat(document.getElementById('pPrice').value),img: imgVal};fetch(FIREBASE_URL, {method: 'POST',body: JSON.stringify(newP)}).then(res => {if(!res.ok) throw new Error();return res.json();}).then(() => {alert("¡Producto añadido a la nube con éxito!");document.getElementById('adminForm').reset();loadDataFromFirebase();}).catch(() => alert("No se pudo guardar. Revisa la consola o las reglas de Firebase."));}// Eliminar producto de Firebasewindow.deleteProduct = function(id) {if (!confirm("¿Seguro que deseas eliminar este producto del catálogo?")) return;const deleteUrl = FIREBASE_URL.replace('products.json', products/${id}.json);fetch(deleteUrl, { method: 'DELETE' }).then(res => {if(!res.ok) throw new Error();loadDataFromFirebase();}).catch(() => alert("Error al eliminar el producto."));};
