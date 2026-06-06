@@ -308,7 +308,7 @@
         }
     }
 
-    function handleModeRoute() {
+    window.handleModeRoute = function() {
         const isLogged = sessionStorage.getItem('isAdmin') === 'true';
         
         if (document.getElementById('sectionAdminForm').classList.contains('active') || document.getElementById('sectionLogin').classList.contains('active')) {
