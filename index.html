@@ -35,10 +35,10 @@
     </div>
 
     <script>
-        const URL_API = "https://script.google.com/macros/s/AKfycbylhIWjOC7mezomTGk36uq5oHv67zDGi1IbE3ZMljnyw6QsiPuEeYbCwk9S9upY8N22/exec";
+        // Tu URL de Google Sheets que ya funciona
+        const URL_API = "https://google.com";
         
-        // ⚠️ COLOCA TU NÚMERO AQUÍ (Con código de país, sin el signo + ni espacios)
-        // Ejemplo Argentina: "54911XXXXXXXX"
+        // Tu número de teléfono configurado
         const TELEFONO_WHATSAPP = "5491159531312"; 
 
         function obtenerProductos() {
@@ -57,15 +57,15 @@
                     let urlImagen = prod.imagen || prod.Imagen || prod.foto || "";
                     if (urlImagen.includes("://google.com")) {
                         const match = urlImagen.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                        if (match && match) urlImagen = `https://://google.com/uc?export=download&id=${match[1]}`;
+                        if (match && match) urlImagen = `https://://google.com/uc?export=download&id=${match}`;
                     }
-                    const fotoPorDefecto = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='240' height='160'><rect width='240' height='160' fill='%23f8fafc'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='12' fill='%2394a3b8'>Imagen no disponible</text></svg>";
+                    const fotoPorDefecto = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='240' height='160'><rect width='240' height='180' fill='%23f8fafc'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='12' fill='%2394a3b8'>Imagen no disponible</text></svg>";
                     const foto = urlImagen ? urlImagen : fotoPorDefecto;
                     
-                     // CONFIGURACIÓN ANTI-ERRORES (Une los textos de forma tradicional con el signo +)
+                    // Formato de texto y enlace simplificado y estandarizado
                     var mensajeTexto = "Hola! Me gustaría encargar el siguiente producto: " + prod.nombre + " (Precio: $" + prod.precio + ")";
-                    var urlWhatsapp = "https://wa.me" + TELEFONO_WHATSAPP + "/?text=" + encodeURIComponent(mensajeTexto);
-
+                    var urlWhatsapp = "https://wa.me" + TELEFONO_WHATSAPP + "?text=" + encodeURIComponent(mensajeTexto);
+                    
                     contenedor.innerHTML += `
                         <div class="tarjeta">
                             <div>
@@ -73,7 +73,7 @@
                                 <div class="nombre">${prod.nombre || 'Producto Nuevo'}</div>
                                 <div class="precio">$${prod.precio || 0}</div>
                             </div>
-                            <a href="${urlWhatsapp}" target="_blank" class="btn-whatsapp">💬 Pedir por WhatsApp</a>
+                            <a href="${urlWhatsapp}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp">💬 Pedir por WhatsApp</a>
                         </div>
                     `;
                 });
@@ -87,6 +87,3 @@
     </script>
 </body>
 </html>
-
-
-        
