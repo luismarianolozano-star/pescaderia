@@ -62,11 +62,9 @@
                     const fotoPorDefecto = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='240' height='160'><rect width='240' height='160' fill='%23f8fafc'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='12' fill='%2394a3b8'>Imagen no disponible</text></svg>";
                     const foto = urlImagen ? urlImagen : fotoPorDefecto;
                     
-                    // Configuración del mensaje automático de WhatsApp
-                    const mensajeTexto = `Hola! Me gustaría encargar el siguiente producto: ${prod.nombre} (Precio: $${prod.precio})`;
-                    //const urlWhatsapp = `https://wa.me{TELEFONO_WHATSAPP}?text=${encodeURIComponent(mensajeTexto)}`;
-                    // CONFIGURACIÓN CORREGIDA (Con la barra diagonal '/' antes del signo de pregunta)
-                    const urlWhatsapp = `https://wa.me{TELEFONO_WHATSAPP}/?text=${encodeURIComponent(mensajeTexto)}`;
+                     // CONFIGURACIÓN ANTI-ERRORES (Une los textos de forma tradicional con el signo +)
+                    var mensajeTexto = "Hola! Me gustaría encargar el siguiente producto: " + prod.nombre + " (Precio: $" + prod.precio + ")";
+                    var urlWhatsapp = "https://wa.me" + TELEFONO_WHATSAPP + "/?text=" + encodeURIComponent(mensajeTexto);
 
                     contenedor.innerHTML += `
                         <div class="tarjeta">
