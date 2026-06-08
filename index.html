@@ -3,25 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo de Productos - Pescadería</title>
+    <title>Pescadería - Catálogo de Productos</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f1f7f9; color: #333; }
-        h1 { text-align: center; color: #0b4f6c; margin-bottom: 30px; }
-        .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
-        .tarjeta { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 1px solid #e2edf1; transition: transform 0.2s; }
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f0f4f8; color: #333; margin: 0; }
+        .header { text-align: center; padding: 30px 20px; background-color: #0f4c81; color: white; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header h1 { margin: 0; font-size: 2em; }
+        .header p { margin: 5px 0 0 0; opacity: 0.9; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+        .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
+        .tarjeta { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-align: center; border: 1px solid #e1e8ed; transition: transform 0.2s; }
         .tarjeta:hover { transform: translateY(-5px); }
-        .tarjeta img { width: 100%; height: 160px; object-fit: contain; border-radius: 8px; background-color: #f8fafb; }
-        .tarjeta h3 { margin: 15px 0 5px 0; font-size: 1.2em; color: #0b4f6c; }
-        .precio { color: #2a9d8f; font-weight: bold; font-size: 1.3em; margin: 10px 0; }
-        .loading { text-align: center; font-size: 1.2em; color: #666; margin-top: 50px; }
+        .tarjeta img { width: 100%; height: 180px; object-fit: contain; border-radius: 8px; background-color: #f8fafc; }
+        .nombre { font-size: 1.3em; font-weight: bold; margin: 15px 0 8px 0; color: #1a202c; }
+        .precio { color: #2b6cb0; font-weight: bold; font-size: 1.5em; margin: 5px 0; }
     </style>
 </head>
 <body>
 
-    <h1>Nuestro Catálogo</h1>
-    
-    <div id="contenedor-productos" class="productos-grid">
-        <p class="loading">Cargando productos...</p>
+    <div class="header">
+        <h1>🐟 Pescadería - Catálogo 🐟</h1>
+        <p>Precios frescos y actualizados al instante</p>
+    </div>
+
+    <div class="container">
+        <div id="contenedor-productos" class="productos-grid">
+            <!-- Los productos se cargan aquí -->
+        </div>
     </div>
 
     <script>
@@ -29,18 +36,22 @@
 
         function obtenerProductos() {
             const contenedor = document.getElementById("contenedor-productos");
+            contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Cargando productos frescos...</p>";
 
             fetch(URL_API)
             .then(res => res.json())
             .then(productos => {
                 contenedor.innerHTML = "";
+                
                 if (!productos || productos.length === 0) {
-                    contenedor.innerHTML = "<p class='loading'>No hay productos disponibles.</p>";
+                    contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>No hay productos disponibles por el momento.</p>";
                     return;
                 }
+                
                 productos.forEach(prod => {
-                    let urlImagen = prod.imagen || prod.Imagen || prod.IMAGEN || prod.foto || prod.Foto || "";
+                    let urlImagen = prod.imagen || prod.Imagen || prod.foto || "";
                     
+                    // Soporte seguro para Google Drive
                     if (urlImagen.includes("://google.com")) {
                         const match = urlImagen.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         if (match && match[1]) {
@@ -48,26 +59,26 @@
                         }
                     }
 
-                    const fotoPorDefecto = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='220' height='160'><rect width='220' height='160' fill='%23eaeaea'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%23666'>Sin Foto</text></svg>";
-                    const fotoError = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='220' height='160'><rect width='220' height='160' fill='%23f8d7da'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%23721c24'>Error de Imagen</text></svg>";
-
+                    // Marcadores integrados limpios
+                    const fotoPorDefecto = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='240' height='180'><rect width='240' height='180' fill='%23f8fafc'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%2394a3b8'>Imagen no disponible</text></svg>";
                     const foto = urlImagen ? urlImagen : fotoPorDefecto;
                     
                     contenedor.innerHTML += `
                         <div class="tarjeta">
-                            <img src="${foto}" alt="${prod.nombre || 'Producto'}" onerror="this.src='${fotoError}'">
-                            <h3>${prod.nombre || 'Sin Nombre'}</h3>
-                            <p class="precio">$${prod.precio || 0}</p>
+                            <img src="${foto}" alt="${prod.nombre || 'Producto'}" onerror="this.src='${fotoPorDefecto}'">
+                            <div class="nombre">${prod.nombre || 'Producto Nuevo'}</div>
+                            <div class="precio">$${prod.precio || 0}</div>
                         </div>
                     `;
                 });
             })
             .catch(err => {
-                contenedor.innerHTML = "<p class='loading'>Error al conectar con el catálogo.</p>";
+                contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:red;'>Error al cargar el catálogo. Intenta nuevamente.</p>";
                 console.error(err);
             });
         }
 
+        // Carga automática inicial
         obtenerProductos();
     </script>
 </body>
