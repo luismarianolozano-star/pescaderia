@@ -6,9 +6,15 @@
     <title>Pescadería - Catálogo de Productos</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f0f4f8; color: #333; margin: 0; }
-        .header { text-align: center; padding: 30px 20px; background-color: #0f4c81; color: white; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        /* Se agregó posición relativa para ubicar el botón de admin */
+        .header { position: relative; text-align: center; padding: 30px 20px; background-color: #0f4c81; color: white; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .header h1 { margin: 0; font-size: 2em; }
         .header p { margin: 5px 0 0 0; opacity: 0.9; }
+        
+        /* Botón discreto para el administrador */
+        .btn-admin-oculto { position: absolute; top: 15px; right: 20px; color: white; opacity: 0.4; text-decoration: none; font-size: 1.3em; transition: opacity 0.2s; }
+        .btn-admin-oculto:hover { opacity: 1; }
+
         .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
         .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
         .tarjeta { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-align: center; border: 1px solid #e1e8ed; transition: transform 0.2s; }
@@ -21,6 +27,9 @@
 <body>
 
     <div class="header">
+        <!-- Acceso directo discreto al panel de administración -->
+        <a href="admin.html" class="btn-admin-oculto" title="Administración">⚙️</a>
+        
         <h1>🐟 Pescadería - Catálogo 🐟</h1>
         <p>Precios frescos y actualizados al instante</p>
     </div>
@@ -32,7 +41,7 @@
     </div>
 
     <script>
-        const URL_API = "https://script.google.com/macros/s/AKfycbylhIWjOC7mezomTGk36uq5oHv67zDGi1IbE3ZMljnyw6QsiPuEeYbCwk9S9upY8N22/exec";
+        const URL_API = "https://google.com";
 
         function obtenerProductos() {
             const contenedor = document.getElementById("contenedor-productos");
@@ -51,15 +60,13 @@
                 productos.forEach(prod => {
                     let urlImagen = prod.imagen || prod.Imagen || prod.foto || "";
                     
-                    // Soporte seguro para Google Drive
                     if (urlImagen.includes("://google.com")) {
                         const match = urlImagen.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                        if (match && match[1]) {
-                            urlImagen = `https://://google.com/uc?export=download&id=${match[1]}`;
+                        if (match && match) {
+                            urlImagen = `https://://google.com/uc?export=download&id=${match}`;
                         }
                     }
 
-                    // Marcadores integrados limpios
                     const fotoPorDefecto = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='240' height='180'><rect width='240' height='180' fill='%23f8fafc'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%2394a3b8'>Imagen no disponible</text></svg>";
                     const foto = urlImagen ? urlImagen : fotoPorDefecto;
                     
@@ -78,7 +85,6 @@
             });
         }
 
-        // Carga automática inicial
         obtenerProductos();
     </script>
 </body>
