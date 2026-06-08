@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Administrable</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Barra de Navegación -->
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">Mi Negocio</span>
+            
+            <!-- Login -->
+            <div id="seccion-login" class="d-flex gap-2">
+                <input type="email" id="login-email" class="form-control form-control-sm" placeholder="Correo">
+                <input type="password" id="login-password" class="form-control form-control-sm" placeholder="Contraseña">
+                <button class="btn btn-primary btn-sm" onclick="iniciarSesion()">Entrar</button>
+            </div>
+
+            <!-- Logout -->
+            <div id="seccion-logout" class="d-none">
+                <span class="text-white me-2">Admin Activo</span>
+                <button class="btn btn-danger btn-sm" onclick="cerrarSesion()">Salir</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Panel Admin -->
+        <div id="panel-admin" class="card p-4 mb-4 d-none shadow-sm">
+            <h4 id="titulo-form">Agregar Nuevo Producto</h4>
+            <input type="hidden" id="producto-id">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" id="nombre" class="form-control" placeholder="Nombre del producto">
+                </div>
+                <div class="col-md-4">
+                    <input type="number" id="precio" class="form-control" placeholder="Precio ($)">
+                </div>
+                <div class="col-md-2">
+                    <button id="btn-guardar" class="btn btn-success w-100" onclick="guardarProducto()">Guardar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Catálogo -->
+        <h3 class="mb-3">Nuestros Productos</h3>
+        <div id="contenedor-productos" class="row row-cols-1 row-cols-md-3 g-3"></div>
+    </div>
+
+    <!-- Librerías de Firebase en versión Compat -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+
+    <script>
+        // Configuración de tu Firebase
+        const firebaseConfig = {
+            
+            apiKey: "AIzaSyBxCjdBhxx5DuOenNnDvaFtwEwHmRZ0inQ",
+  		authDomain: "pescaderia-ee093.firebaseapp.com",
+ 		 projectId: "pescaderia-ee093",
+  		storageBucket: "pescaderia-ee093.firebasestorage.app",
+ 		 messagingSenderId: "814193353067",
+ 		 appId: "1:814193353067:web:bb877b4d7d955a24f12c2e"
+        };
+
+        // Inicialización
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        let esAdmin = false;
+
+        // --- AUTENTICACIÓN ---
+        function iniciarSesion() {
+            const email = document.getElementById("login-email").value;
+            const pass = document.getElementById("login-password").value;
+            auth.signInWithEmailAndPassword(email, pass).catch(error => {
+                alert("Error: " + error.message);
+            });
+        }
+
+        function cerrarSesion() {
+            auth.signOut();
+        }
+
+        auth.onAuthStateChanged(user => {
+            const seccionLogin = document.getElementById("seccion-login");
+            const seccionLogout = document.getElementById("seccion-logout");
+            const panelAdmin = document.getElementById("panel-admin");
+
+            if (user) {
+                esAdmin = true;
+                seccionLogin.classList.add("d-none");
+                seccionLogout.classList.remove("d-none");
+                panelAdmin.classList.remove("d-none");
+            } else {
+                esAdmin = false;
+                seccionLogin.classList.remove("d-none");
+                seccionLogout.classList.add("d-none");
+                panelAdmin.classList.add("d-none");
+                limpiarFormulario();
+            }
+        });
+
+        // --- ACCIONES PRODUCTOS ---
+        function guardarProducto() {
+            const id = document.getElementById("producto-id").value;
+            const nombre = document.getElementById("nombre").value;
+            const precio = document.getElementById("precio").value;
+
+            if (!nombre || !precio) return alert("Completa los campos");
+
+            if (id === "") {
+                db.collection("productos").add({ nombre, precio: parseFloat(precio) });
+            } else {
+                db.collection("productos").doc(id).update({ nombre, precio: parseFloat(precio) });
+                limpiarFormulario();
+            }
+            document.getElementById("nombre").value = "";
+            document.getElementById("precio").value = "";
+        }
+
+        function eliminarProducto(id) {
+            if (confirm("¿Deseas eliminar este producto?")) {
+                db.collection("productos").doc(id).delete();
+            }
+        }
+
+        function prepararEdicion(id, nombre, precio) {
+            document.getElementById("producto-id").value = id;
+            document.getElementById("nombre").value = nombre;
+            document.getElementById("precio").value = precio;
+            document.getElementById("titulo-form").innerText = "Modificar Producto";
+            document.getElementById("btn-guardar").innerText = "Actualizar";
+            window.scrollTo(0, 0);
+        }
+
+        function limpiarFormulario() {
+            document.getElementById("producto-id").value = "";
+            document.getElementById("nombre").value = "";
+            document.getElementById("precio").value = "";
+            document.getElementById("titulo-form").innerText = "Agregar Nuevo Producto";
+            document.getElementById("btn-guardar").innerText = "Guardar";
+        }
+
+        // --- TIEMPO REAL ---
+        db.collection("productos").onSnapshot(snapshot => {
+            const contenedor = document.getElementById("contenedor-productos");
+            contenedor.innerHTML = "";
+            
+            snapshot.forEach(doc => {
+                const id = doc.id;
+                const prod = doc.data();
+                
+                const botonesAdmin = esAdmin ? `
+                    <div class="card-footer d-flex gap-2">
+                        <button class="btn btn-warning btn-sm flex-grow-1" onclick="prepararEdicion('${id}', '${prod.nombre}', ${prod.precio})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${id}')">Eliminar</button>
+                    </div>
+                ` : "";
+
+                contenedor.innerHTML += `
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">${prod.nombre}</h5>
+                                <p class="card-text text-success fw-bold">$${prod.precio}</p>
+                            </div>
+                            ${botonesAdmin}
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
