@@ -3,36 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo de Productos</title>
+    <title>Catálogo de Productos - Pescadería</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; }
-        .card { border: 1px solid #ccc; padding: 15px; border-radius: 8px; width: 200px; text-align: center; }
-        .card img { max-width: 100%; height: 150px; object-fit: cover; }
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f1f7f9; color: #333; }
+        h1 { text-align: center; color: #0b4f6c; margin-bottom: 30px; }
+        .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .tarjeta { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 1px solid #e2edf1; transition: transform 0.2s; }
+        .tarjeta:hover { transform: translateY(-5px); }
+        .tarjeta img { width: 100%; height: 160px; object-fit: contain; border-radius: 8px; background-color: #f8fafb; }
+        .tarjeta h3 { margin: 15px 0 5px 0; font-size: 1.2em; color: #0b4f6c; }
+        .precio { color: #2a9d8f; font-weight: bold; font-size: 1.3em; margin: 10px 0; }
+        .loading { text-align: center; font-size: 1.2em; color: #666; margin-top: 50px; }
     </style>
 </head>
 <body>
-    <h1>Nuestros Productos</h1>
-    <div id="catalogo">Cargando productos...</div>
+
+    <h1>Nuestro Catálogo</h1>
+    
+    <div id="contenedor-productos" class="productos-grid">
+        <p class="loading">Cargando productos...</p>
+    </div>
 
     <script>
-        const URL_API = "https://script.google.com/macros/s/AKfycbz9hJVU8DDRiyJL9tCe-Or6vRx_u5RIq1FQpggpgl4bIihENEVQ3mi-LcmucDD-n2xj/exec";
+        const URL_API = "https://google.com";
 
-        fetch(URL_API)
+        function obtenerProductos() {
+            const contenedor = document.getElementById("contenedor-productos");
+
+            fetch(URL_API)
             .then(res => res.json())
             .then(productos => {
-                const contenedor = document.getElementById("catalogo");
                 contenedor.innerHTML = "";
-                productos.forEach(p => {
+                if (!productos || productos.length === 0) {
+                    contenedor.innerHTML = "<p class='loading'>No hay productos disponibles.</p>";
+                    return;
+                }
+                productos.forEach(prod => {
+                    let urlImagen = prod.imagen || prod.Imagen || prod.IMAGEN || prod.foto || prod.Foto || "";
+                    
+                    if (urlImagen.includes("://google.com")) {
+                        const match = urlImagen.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                        if (match && match[1]) {
+                            urlImagen = `https://://google.com/uc?export=download&id=${match[1]}`;
+                        }
+                    }
+
+                    const fotoPorDefecto = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='220' height='160'><rect width='220' height='160' fill='%23eaeaea'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%23666'>Sin Foto</text></svg>";
+                    const fotoError = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='220' height='160'><rect width='220' height='160' fill='%23f8d7da'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%23721c24'>Error de Imagen</text></svg>";
+
+                    const foto = urlImagen ? urlImagen : fotoPorDefecto;
+                    
                     contenedor.innerHTML += `
-                        <div class="card">
-                            <img src="${p.imagen}" alt="${p.nombre}">
-                            <h3>${p.nombre}</h3>
-                            <p>Precio: $${p.precio}</p>
-                            <small>ID: ${p.id}</small>
+                        <div class="tarjeta">
+                            <img src="${foto}" alt="${prod.nombre || 'Producto'}" onerror="this.src='${fotoError}'">
+                            <h3>${prod.nombre || 'Sin Nombre'}</h3>
+                            <p class="precio">$${prod.precio || 0}</p>
                         </div>
                     `;
                 });
+            })
+            .catch(err => {
+                contenedor.innerHTML = "<p class='loading'>Error al conectar con el catálogo.</p>";
+                console.error(err);
             });
+        }
+
+        obtenerProductos();
     </script>
 </body>
 </html>
