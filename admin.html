@@ -39,7 +39,7 @@
     </div>
 
     <script>
-        const URL_API = "https://script.google.com/macros/s/AKfycbz9hJVU8DDRiyJL9tCe-Or6vRx_u5RIq1FQpggpgl4bIihENEVQ3mi-LcmucDD-n2xj/exec";
+        const URL_API = "https://google.com";
 
         // ENVIAR DATOS (POST)
         document.getElementById("formProducto").addEventListener("submit", function(e) {
@@ -76,7 +76,6 @@
             fetch(URL_API)
             .then(res => res.json())
             .then(productos => {
-                console.log("Datos recibidos de Google:", productos); // Permite revisar fallas en F12
                 contenedor.innerHTML = "";
                 
                 if (!productos || productos.length === 0) {
@@ -85,29 +84,31 @@
                 }
                 
                 productos.forEach(prod => {
-                    // Lee la propiedad de la imagen sin importar mayúsculas
-                    let urlImagen = prod.imagen || prod.Imagen || prod.IMAGEN || prod.foto || prod.Foto || "";
-                    
-                    // Conversor automático para enlaces de Google Drive
-                    if (urlImagen.includes("drive.google.com")) {
-                        const partes = urlImagen.split("/d/");
-                        if (partes[1]) {
-                            const idDrive = partes[1].split("/")[0];
-                            urlImagen = `https://google.com{idDrive}`;
+                    try {
+                        // Detecta el campo de la imagen de forma flexible
+                        let urlImagen = prod.imagen || prod.Imagen || prod.IMAGEN || prod.foto || prod.Foto || "";
+                        
+                        // Conversor seguro para Google Drive
+                        if (urlImagen.includes("://google.com")) {
+                            const match = urlImagen.match(/\/d\/([a-zA-Z0-9_-]+)/) || urlImagen.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                            if (match && match[1]) {
+                                urlImagen = `https://://google.com/uc?export=download&id=${match[1]}`;
+                            }
                         }
-                    }
 
-                    // Imagen de reemplazo válida si está vacío
-                    const foto = urlImagen ? urlImagen : "https://placehold.co";
-                    
-                    contenedor.innerHTML += `
-                        <div class="tarjeta">
-                            <img src="${foto}" alt="${prod.nombre || 'Producto'}" onerror="this.src='https://placehold.co'">
-                            <h3>${prod.nombre || 'Sin Nombre'}</h3>
-                            <p class="precio">$${prod.precio || 0}</p>
-                            <small style="color: #6c757d;">ID: ${prod.id || 'N/A'}</small>
-                        </div>
-                    `;
+                        const foto = urlImagen ? urlImagen : "https://placehold.co";
+                        
+                        contenedor.innerHTML += `
+                            <div class="tarjeta">
+                                <img src="${foto}" alt="${prod.nombre || 'Producto'}" onerror="this.src='https://placehold.co'">
+                                <h3>${prod.nombre || 'Sin Nombre'}</h3>
+                                <p class="precio">$${prod.precio || 0}</p>
+                                <small style="color: #6c757d;">ID: ${prod.id || 'N/A'}</small>
+                            </div>
+                        `;
+                    } catch (errorInterno) {
+                        console.error("Error al procesar un producto individual:", errorInterno);
+                    }
                 });
             })
             .catch(err => {
@@ -121,4 +122,3 @@
     </script>
 </body>
 </html>
-
