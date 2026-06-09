@@ -64,7 +64,7 @@
                     
                     // Formato de texto y enlace simplificado y estandarizado
                     var mensajeTexto = "Hola! Me gustaría encargar el siguiente producto: " + prod.nombre + " (Precio: $" + prod.precio + ")";
-                    var urlWhatsapp = "https://wa.me" + TELEFONO_WHATSAPP + "?text=" + encodeURIComponent(mensajeTexto);
+                    var urlWhatsapp = "https://wa.me/" + TELEFONO_WHATSAPP + "?text=" + encodeURIComponent(mensajeTexto);
                     
                     contenedor.innerHTML += `
                         <div class="tarjeta">
